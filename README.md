@@ -4,9 +4,9 @@
 
 This project implements automatic log storage management for an information system consisting of three services:
 
-* `auth_service`
-* `data_process_service`
-* `system_event_handler_service`
+- `auth_service`
+- `data_process_service`
+- `system_event_handler_service`
 
 Log files are stored in:
 
@@ -34,15 +34,15 @@ Main cleanup script.
 
 It:
 
-* checks that `/LOGS` is mounted;
-* checks partition usage;
-* compares usage with the configured limit;
-* divides the allowed log storage between three services;
-* finds overloaded service directories;
-* selects the oldest log files;
-* creates `.tar.gz` archives;
-* verifies created archives;
-* deletes archived log files.
+- checks that `/LOGS` is mounted;
+- checks partition usage;
+- compares usage with the configured limit;
+- divides the allowed log storage between three services;
+- finds overloaded service directories;
+- selects the oldest log files;
+- creates `.tar.gz` archives;
+- verifies created archives;
+- deletes archived log files.
 
 Default usage limit:
 
@@ -66,12 +66,12 @@ The tests create a temporary environment, generate log files, run `cleanup.sh`, 
 
 The test scenarios include:
 
-* no cleanup when partition usage is below the limit;
-* cleanup of only one overloaded service;
-* verification that the oldest log file is archived first;
-* cleanup of two overloaded services;
-* behavior when partition usage is exactly equal to the limit;
-* invalid environment and configuration cases.
+- no cleanup when partition usage is below the limit;
+- cleanup of only one overloaded service;
+- verification that the oldest log file is archived first;
+- cleanup of two overloaded services;
+- behavior when partition usage is exactly equal to the limit;
+- invalid environment and configuration cases.
 
 Run:
 
@@ -121,6 +121,12 @@ After mounting, it creates:
 
 Systemd service used to run `mount_logs.sh` automatically when the operating system starts.
 
+The service runs the script from:
+
+```text
+/usr/local/bin/mount_logs.sh
+```
+
 ---
 
 ### `mount-logs.conf.example`
@@ -132,24 +138,67 @@ DEVICE=/dev/sdb1
 MOUNTDIR=/LOGS
 ```
 
-Copy it to:
-
-```bash
-sudo cp mount-logs.conf.example /etc/default/mount-logs
-```
-
-Then edit it:
-
-```bash
-sudo nano /etc/default/mount-logs
-```
-
-For example, in WSL:
+For WSL:
 
 ```bash
 DEVICE=E:
 MOUNTDIR=/LOGS
 ```
+
+---
+
+## Permissions
+
+Make the shell scripts executable:
+
+```bash
+chmod +x cleanup.sh
+chmod +x test_cleanup.sh
+chmod +x mount_logs.sh
+```
+
+---
+
+## Install mount script
+
+Copy `mount_logs.sh` to a system-wide location:
+
+```bash
+sudo cp mount_logs.sh /usr/local/bin/mount_logs.sh
+sudo chmod +x /usr/local/bin/mount_logs.sh
+```
+
+---
+
+## Configure mount device
+
+Copy the example configuration:
+
+```bash
+sudo cp mount-logs.conf.example /etc/default/mount-logs
+```
+
+Edit it:
+
+```bash
+sudo nano /etc/default/mount-logs
+```
+
+Linux example:
+
+```bash
+DEVICE=/dev/sdb1
+MOUNTDIR=/LOGS
+```
+
+WSL example:
+
+```bash
+DEVICE=E:
+MOUNTDIR=/LOGS
+```
+
+The device is configured separately, so the systemd service does not depend on a specific disk or drive letter.
 
 ---
 
@@ -185,6 +234,12 @@ Check its status:
 systemctl status mount-logs.service
 ```
 
+Expected service state:
+
+```text
+active (exited)
+```
+
 Check that `/LOGS` is mounted:
 
 ```bash
@@ -197,17 +252,37 @@ Expected result:
 /LOGS is a mountpoint
 ```
 
----
-
-## Permissions
-
-Make the shell scripts executable:
+Check service directories:
 
 ```bash
-chmod +x cleanup.sh
-chmod +x test_cleanup.sh
-chmod +x mount_logs.sh
+ls /LOGS
 ```
+
+The following directories should exist:
+
+```text
+auth_service
+data_process_service
+system_event_handler_service
+```
+
+---
+
+## Cleanup
+
+Run the cleanup script:
+
+```bash
+./cleanup.sh /LOGS 90 ./backup
+```
+
+Arguments:
+
+1. LOGS directory
+2. partition usage limit in percent
+3. backup directory
+
+The backup directory must not be located inside the `/LOGS` partition.
 
 ---
 
@@ -225,3 +300,4 @@ Expected final output:
 ALL TESTS PASSED
 ```
 
+The test script automatically creates the test environment and checks both positive and negative scenarios.
