@@ -5,7 +5,7 @@ After=local-fs.target
 [Service]
 Type=oneshot
 EnvironmentFile=/etc/default/mount-logs
-ExecStart=/home/nikita/lab/mount_logs.sh ${DEVICE} ${MOUNTDIR}
+ExecStart=/usr/local/bin/mount_logs.sh ${DEVICE} ${MOUNTDIR}
 RemainAfterExit=yes
 
 [Install]
