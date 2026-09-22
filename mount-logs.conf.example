@@ -1,0 +1,3 @@
+DEVICE=/dev/sdb1
+MOUNTDIR=/LOGS
+
